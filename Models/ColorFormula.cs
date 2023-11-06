@@ -9,7 +9,7 @@ using System.Windows;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Reflection;
-
+using System.IO;
 
 namespace kostka_rgb.Models
 {
@@ -23,6 +23,7 @@ namespace kostka_rgb.Models
         {
             (ColorCallback r, ColorCallback g, ColorCallback b) = _values[_index++ % _values.Length];
             GradientImage = GenerateGradient(r, g, b);
+            
         }
 
         private static BitmapSource GenerateGradient(ColorCallback red, ColorCallback green, ColorCallback blue)
@@ -64,6 +65,10 @@ namespace kostka_rgb.Models
             }
 
             bmp.UnlockBits(data);
+
+            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "gradients/"+_index+".png");
+            bmp.Save(filePath, ImageFormat.Png);
+
             return bmp;
         }
         private static int _index = 0;
