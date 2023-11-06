@@ -30,16 +30,6 @@ namespace kostka_rgb.VievModels
         private GeometryModel3D CreateFaceModel(int faceIndex, BitmapSource texture)
         {
             var mesh = new MeshGeometry3D();
-            
-            //To jest do poprawy, na razie po prostu niektóre idą w złe miejsca więc je przekładam (można zrobić gdzie indziej)
-            
-            if(faceIndex==0)faceIndex = 4;
-            else if(faceIndex==4)faceIndex = 0;
-            if (faceIndex == 5) faceIndex = 3;
-            else if(faceIndex==3) faceIndex = 5;
-
-
-
             // Define your points and triangle indices per face
             Point3D[] facePoints = GetFacePoints(faceIndex);
             mesh.Positions = new Point3DCollection(facePoints);
@@ -51,10 +41,12 @@ namespace kostka_rgb.VievModels
             mesh.TextureCoordinates = new PointCollection
         {
             new Point(0, 0),
-            new Point(1, 0),
+            (faceIndex==1||faceIndex==2||faceIndex==4||faceIndex==5)? new Point(1, 0):new Point(0, 1),
             new Point(1, 1),
-            new Point(0, 1)
+            (faceIndex==1||faceIndex==2||faceIndex==4||faceIndex==5)? new Point(0, 1):new Point(1, 0)
         };
+
+            
 
             var material = new DiffuseMaterial(new ImageBrush(texture));
             return new GeometryModel3D(mesh, material);
@@ -64,24 +56,24 @@ namespace kostka_rgb.VievModels
         {
             Point3D[] allPoints = new[]
             {
-        new Point3D(0, 0, 0), // 0
-        new Point3D(1, 0, 0), // 1
-        new Point3D(0, 1, 0), // 2
-        new Point3D(1, 1, 0), // 3
-        new Point3D(0, 0, 1), // 4
-        new Point3D(1, 0, 1), // 5
-        new Point3D(0, 1, 1), // 6
-        new Point3D(1, 1, 1)  // 7
-    };
+                new Point3D(0, 0, 0), // 0
+                new Point3D(1, 0, 0), // 1
+                new Point3D(0, 1, 0), // 2
+                new Point3D(1, 1, 0), // 3
+                new Point3D(0, 0, 1), // 4
+                new Point3D(1, 0, 1), // 5
+                new Point3D(0, 1, 1), // 6
+                new Point3D(1, 1, 1)  // 7
+            };
 
             switch (faceIndex)
             {
-                case 0: return new[] { allPoints[2], allPoints[3], allPoints[1], allPoints[0] }; // Front face
+                case 0: return new[] { allPoints[6], allPoints[2], allPoints[0], allPoints[4] }; // Left face
                 case 1: return new[] { allPoints[7], allPoints[3], allPoints[2], allPoints[6] }; // Top face
                 case 2: return new[] { allPoints[7], allPoints[6], allPoints[4], allPoints[5] }; // Back face
-                case 3: return new[] { allPoints[1], allPoints[5], allPoints[4], allPoints[0] }; // Bottom face
-                case 4: return new[] { allPoints[6], allPoints[2], allPoints[0], allPoints[4] }; // Left face
-                case 5: return new[] { allPoints[3], allPoints[7], allPoints[5], allPoints[1] }; // Right face
+                case 3: return new[] { allPoints[7], allPoints[5], allPoints[1], allPoints[3] }; // Right face
+                case 4: return new[] { allPoints[3], allPoints[1], allPoints[0], allPoints[2] }; // Front face
+                case 5: return new[] { allPoints[5], allPoints[4], allPoints[0], allPoints[1] }; // Bottom face
                 default: throw new ArgumentOutOfRangeException(nameof(faceIndex), "Face index must be between 0 and 5.");
             }
         }

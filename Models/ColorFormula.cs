@@ -66,7 +66,7 @@ namespace kostka_rgb.Models
 
             bmp.UnlockBits(data);
 
-            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "gradients/"+_index+".png");
+            string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "gradients/"+(_index-1)+".png");
             bmp.Save(filePath, ImageFormat.Png);
 
             return bmp;
