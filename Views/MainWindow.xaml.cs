@@ -24,7 +24,8 @@ namespace kostka_rgb
         public MainWindow()
         {
             InitializeComponent();
-            this.DataContext = new CubeViewModel();
+            this.DataContext = new FigureViewModel();
         }
+
     }
 }
