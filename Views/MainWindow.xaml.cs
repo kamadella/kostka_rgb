@@ -26,5 +26,6 @@ namespace kostka_rgb
             InitializeComponent();
             this.DataContext = new FigureViewModel();
         }
+
     }
 }

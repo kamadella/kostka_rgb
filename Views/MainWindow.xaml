@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:local="clr-namespace:kostka_rgb"
         mc:Ignorable="d"
         Title="RGB Cube Drawing" Height="450" Width="800">
@@ -15,7 +16,15 @@
             </Viewport3D.Camera>
             <ModelVisual3D>
                 <ModelVisual3D.Content>
-                    <DirectionalLight Direction="-1,-1,-1"/>
+                    <Model3DGroup>
+                        <!-- First directional light -->
+                        <DirectionalLight Color="White" Direction="-1,-1,-1" />
+                        <!-- Second directional light -->
+                        <DirectionalLight Color="White" Direction="1,1,-1" />
+                        <!-- Point light example -->
+                        <PointLight Color="White" Position="0,5,0" />
+                        <!-- Spot light example -->
+                    </Model3DGroup>
                 </ModelVisual3D.Content>
             </ModelVisual3D>
             <ModelVisual3D>
@@ -25,7 +34,7 @@
                 <ModelVisual3D.Transform>
                     <Transform3DGroup>
                         <Transform3DGroup.Children>
-                            <TranslateTransform3D OffsetX="-0.5" OffsetY="-0.5" OffsetZ="-0.5" />
+                            <TranslateTransform3D OffsetX="0" OffsetY="0" OffsetZ="0" />
                             <RotateTransform3D>
                                 <RotateTransform3D.Rotation>
                                     <AxisAngleRotation3D x:Name="rotateX" Axis="1 0 0"/>
@@ -47,13 +56,25 @@
                 </ModelVisual3D.Transform>
             </ModelVisual3D>
         </Viewport3D>
-        <StackPanel Orientation="Vertical">
-            <Slider Maximum="360"
-                    Value="{Binding ElementName=rotateX, Path=Angle}" />
-            <Slider Maximum="360"
-                    Value="{Binding ElementName=rotateY, Path=Angle}" />
-            <Slider Maximum="360"
-                    Value="{Binding ElementName=rotateZ, Path=Angle}" />
+        <StackPanel Margin="20,0,20,0" Orientation="Vertical">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding ChangeShapeCommand}" 
+                                           CommandParameter="{Binding SelectedItem.Content, ElementName=shapeSelector}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+
+            <!-- ComboBox for selecting the shape -->
+            <ComboBox x:Name="shapeSelector" HorizontalAlignment="Left" SelectedIndex="0" Width="100" Margin="0,0,0,10">
+                <ComboBoxItem Content="Cube"/>
+                <ComboBoxItem Content="Cone"/>
+            </ComboBox>
+
+            <!-- Sliders -->
+            <Slider Maximum="360" Value="{Binding ElementName=rotateX, Path=Angle}" />
+            <Slider Maximum="360" Value="{Binding ElementName=rotateY, Path=Angle}" />
+            <Slider Maximum="360" Value="{Binding ElementName=rotateZ, Path=Angle}" />
         </StackPanel>
+
     </Grid>
 </Window>

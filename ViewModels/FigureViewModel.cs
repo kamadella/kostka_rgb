@@ -1,6 +1,7 @@
 ﻿using kostka_rgb.Models;
 using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
@@ -10,69 +11,125 @@ namespace kostka_rgb.VievModels
     class FigureViewModel : ViewModelBase
     {
         private Model3DGroup _shapeModel = new Model3DGroup();
+        private Model3DGroup _cube = new Model3DGroup();
+        private Model3DGroup _cone = new Model3DGroup();
         public Model3DGroup ShapeModel => _shapeModel;
         public bool Cone = true;
 
+        // ICommand property to switch shapes
+        public ICommand ChangeShapeCommand { get; }
+
         public FigureViewModel()
         {
-            if (!Cone)
+            ChangeShapeCommand = new RelayCommand<string>(ChangeShape);
+
+            for (int i = 0; i < 6; i++)
             {
-                for (int i = 0; i < 6; i++)
-                {
-                    _shapeModel.Children.Add(CreateFaceModel(i, ColorFormula.GetNextGradient()));
-                }
+                _cone.Children.Add(CreateFaceModel(i, ColorFormula.GetNextGradient()));
             }
-            else
+
+
+            _cube.Children.Add(CreateConeSurfaceModel());
+            _cube.Children.Add(CreateConeBaseModel());
+
+
+            _shapeModel = (Cone)? _cone: _cube;
+        }
+
+        private void ChangeShape(string parameter)
+        {
+            if (parameter is string shape)
             {
-                _shapeModel.Children.Add(CreateConeModel(ColorFormula.GetNextGradient()));
+                switch (shape)
+                {
+                    case "Cube":
+                        _shapeModel = _cube;
+                        break;
+                    case "Cone":
+                        _shapeModel = _cone;
+                        break;
+                    default:
+                        throw new ArgumentException("Invalid shape type", nameof(shape));
+                }
+
+                // Notify the view of the change
+                OnPropertyChanged(nameof(ShapeModel));
             }
         }
 
-        public GeometryModel3D CreateConeModel(BitmapSource hsvTexture)
+        public GeometryModel3D CreateConeSurfaceModel()
         {
-            int baseSegmentCount = 64;
-            double radius = 1;
-
+            int baseSegmentCount = 64; // Number of segments to represent the circle
+            double radius = 1; // Radius of the base of the cone
             MeshGeometry3D mesh = new MeshGeometry3D();
 
             // Create the top point of the cone.
-            Point3D topPoint = new Point3D(0, -2, 0);
+            Point3D topPoint = new Point3D(0, -1, 0); // This is the tip of the cone
             mesh.Positions.Add(topPoint);
+            // Texture coordinate for the tip is at the center top of the texture (U = 0.5, V = 0)
+            mesh.TextureCoordinates.Add(new Point(0.5, 0.5)); // Texture coordinate for the center point
 
-            mesh.TextureCoordinates.Add(new Point(0, 0));
-
-            // Create the bottom circle points.
+            // Create the bottom circle points and texture coordinates for the curved surface.
             double angleStep = 2 * Math.PI / baseSegmentCount;
+            for (int i = 0; i <= baseSegmentCount; i++) // Include the first point again to close the loop
+            {
+                double angle = i * angleStep;
+                double x = radius * Math.Cos(angle);
+                double z = radius * Math.Sin(angle);
+                mesh.Positions.Add(new Point3D(x, 1, z)); // This is the base of the cone
+
+                // Map the texture coordinates for the base
+                double u = 0.5 + 0.5 * Math.Cos(angle);
+                double v = 0.5 + 0.5 * Math.Sin(angle);
+                mesh.TextureCoordinates.Add(new Point(u, v));
+            }
+
+            // Create the side triangles (cone surface).
+            for (int i = 0; i < baseSegmentCount; i++)
+            {
+                mesh.TriangleIndices.Add(0); // Top point - tip of the cone
+                mesh.TriangleIndices.Add(i + 1); // Current base point
+                mesh.TriangleIndices.Add(i + 2); // Next base point
+            }
+
+            var material = new DiffuseMaterial(new ImageBrush(ColorFormula.GenerateHSVGradient(false)));
+            return new GeometryModel3D(mesh, material);
+        }
+
+        public GeometryModel3D CreateConeBaseModel()
+        {
+            int baseSegmentCount = 64;
+            MeshGeometry3D mesh = new MeshGeometry3D();
+
+            // Create the center point for the bottom circle.
+            mesh.Positions.Add(new Point3D(0, 1, 0));
+            mesh.TextureCoordinates.Add(new Point(0.5, 0.5)); // Texture coordinate for the center point
+
+            // Create the bottom circle points and texture coordinates for the base.
+            double angleStep = 2 * Math.PI / baseSegmentCount;
+            double radius = 1;
             for (int i = 0; i < baseSegmentCount; i++)
             {
                 double angle = i * angleStep;
                 double x = radius * Math.Cos(angle);
                 double z = radius * Math.Sin(angle);
-                mesh.Positions.Add(new Point3D(x, 0, z));
-                mesh.TextureCoordinates.Add(new Point(x, z));
-            }
+                mesh.Positions.Add(new Point3D(x, 1, z));
 
-            // Add the center point for the bottom circle to create a fan of triangles for the base.
-            mesh.Positions.Add(new Point3D(0, 0, 0)); // Center point
-            mesh.TextureCoordinates.Add(new Point(0, -1.0)); // Assuming bottom color is at the bottom center of the texture
-
-            // Create the side triangles (cone surface).
-            for (int i = 0; i < baseSegmentCount; i++)
-            {
-                mesh.TriangleIndices.Add(0); // Top point
-                mesh.TriangleIndices.Add(i + 1);
-                mesh.TriangleIndices.Add(i < baseSegmentCount - 1 ? i + 2 : 1);
+                // Map the texture coordinates for the base
+                double u = 0.5 + 0.5 * Math.Cos(angle);
+                double v = 0.5 + 0.5 * Math.Sin(angle);
+                mesh.TextureCoordinates.Add(new Point(u, v));
             }
 
             // Create the bottom circle triangles (cone base).
-            for (int i = 0; i < baseSegmentCount; i++)
+            for (int i = 1; i <= baseSegmentCount; i++)
             {
-                mesh.TriangleIndices.Add(baseSegmentCount + 1); // Center point
-                mesh.TriangleIndices.Add(i < baseSegmentCount - 1 ? i + 2 : 1);
-                mesh.TriangleIndices.Add(i + 1);
+                mesh.TriangleIndices.Add(0); // Center point
+                mesh.TriangleIndices.Add(i < baseSegmentCount ? i + 1 : 1);
+                mesh.TriangleIndices.Add(i);
             }
-            
-            var material = new DiffuseMaterial(new ImageBrush(ColorFormula.GenerateHSVGradient()));
+
+            var material = new DiffuseMaterial(new ImageBrush(ColorFormula.GenerateHSVGradient(true)));
             return new GeometryModel3D(mesh, material);
         }
 
@@ -104,14 +161,14 @@ namespace kostka_rgb.VievModels
         {
             Point3D[] allPoints = new[]
             {
-                new Point3D(0, 0, 0), // 0
-                new Point3D(1, 0, 0), // 1
-                new Point3D(0, 1, 0), // 2
-                new Point3D(1, 1, 0), // 3
-                new Point3D(0, 0, 1), // 4
-                new Point3D(1, 0, 1), // 5
-                new Point3D(0, 1, 1), // 6
-                new Point3D(1, 1, 1)  // 7
+                new Point3D(-0.5, -0.5, -0.5), // 0
+                new Point3D( 0.5, -0.5, -0.5), // 1
+                new Point3D(-0.5,  0.5, -0.5), // 2
+                new Point3D( 0.5,  0.5, -0.5), // 3
+                new Point3D(-0.5, -0.5,  0.5), // 4
+                new Point3D( 0.5, -0.5,  0.5), // 5
+                new Point3D(-0.5,  0.5,  0.5), // 6
+                new Point3D( 0.5,  0.5,  0.5)  // 7
             };
 
             switch (faceIndex)
