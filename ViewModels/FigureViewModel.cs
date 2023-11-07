@@ -13,30 +13,41 @@ namespace kostka_rgb.VievModels
         private Model3DGroup _shapeModel = new Model3DGroup();
         private Model3DGroup _cube = new Model3DGroup();
         private Model3DGroup _cone = new Model3DGroup();
-        public Model3DGroup ShapeModel => _shapeModel;
-        public bool Cone = true;
+        public Model3DGroup ShapeModel
+        {
+            get => _shapeModel;
+            set
+            {
+                if (_shapeModel != value)
+                {
+                    _shapeModel = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public bool Cone = false;
 
         // ICommand property to switch shapes
         public ICommand ChangeShapeCommand { get; }
 
         public FigureViewModel()
         {
-            ChangeShapeCommand = new RelayCommand<string>(ChangeShape);
+            ChangeShapeCommand = new RelayCommand(ChangeShape);
 
             for (int i = 0; i < 6; i++)
             {
-                _cone.Children.Add(CreateFaceModel(i, ColorFormula.GetNextGradient()));
+                _cube.Children.Add(CreateFaceModel(i, ColorFormula.GetNextGradient()));
             }
 
 
-            _cube.Children.Add(CreateConeSurfaceModel());
-            _cube.Children.Add(CreateConeBaseModel());
+            _cone.Children.Add(CreateConeSurfaceModel());
+            _cone.Children.Add(CreateConeBaseModel());
 
 
             _shapeModel = (Cone)? _cone: _cube;
         }
 
-        private void ChangeShape(string parameter)
+        private void ChangeShape(object parameter)
         {
             if (parameter is string shape)
             {

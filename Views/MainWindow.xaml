@@ -57,18 +57,18 @@
             </ModelVisual3D>
         </Viewport3D>
         <StackPanel Margin="20,0,20,0" Orientation="Vertical">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="SelectionChanged">
-                    <i:InvokeCommandAction Command="{Binding ChangeShapeCommand}" 
-                                           CommandParameter="{Binding SelectedItem.Content, ElementName=shapeSelector}"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-
             <!-- ComboBox for selecting the shape -->
             <ComboBox x:Name="shapeSelector" HorizontalAlignment="Left" SelectedIndex="0" Width="100" Margin="0,0,0,10">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectionChanged">
+                        <i:InvokeCommandAction Command="{Binding ChangeShapeCommand}" 
+                                   CommandParameter="{Binding SelectedItem.Content, ElementName=shapeSelector}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
                 <ComboBoxItem Content="Cube"/>
                 <ComboBoxItem Content="Cone"/>
             </ComboBox>
+
 
             <!-- Sliders -->
             <Slider Maximum="360" Value="{Binding ElementName=rotateX, Path=Angle}" />
